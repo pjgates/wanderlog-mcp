@@ -6,6 +6,21 @@ import {
   addChecklistInputSchema,
 } from "./tools/add-checklist.js";
 import {
+  addPlaceByCoords,
+  addPlaceByCoordsDescription,
+  addPlaceByCoordsInputSchema,
+} from "./tools/add-place-by-coords.js";
+import {
+  addPlacesByCoordsBatch,
+  addPlacesByCoordsBatchDescription,
+  addPlacesByCoordsBatchInputSchema,
+} from "./tools/add-places-by-coords-batch.js";
+import {
+  setCookie,
+  setCookieDescription,
+  setCookieInputSchema,
+} from "./tools/set-cookie.js";
+import {
   addExpense,
   addExpenseDescription,
   addExpenseInputSchema,
@@ -183,6 +198,26 @@ export function buildServer(ctx: AppContext): McpServer {
   );
 
   server.registerTool(
+    "wanderlog_add_place_by_coords",
+    {
+      title: "Add a place to a Wanderlog trip by GPS coordinates",
+      description: addPlaceByCoordsDescription,
+      inputSchema: addPlaceByCoordsInputSchema,
+    },
+    requireAuth(ctx, async (args) => addPlaceByCoords(ctx, args as Parameters<typeof addPlaceByCoords>[1])),
+  );
+
+  server.registerTool(
+    "wanderlog_add_places_by_coords_batch",
+    {
+      title: "Batch-add multiple places to a Wanderlog trip by GPS coordinates",
+      description: addPlacesByCoordsBatchDescription,
+      inputSchema: addPlacesByCoordsBatchInputSchema,
+    },
+    requireAuth(ctx, async (args) => addPlacesByCoordsBatch(ctx, args as Parameters<typeof addPlacesByCoordsBatch>[1])),
+  );
+
+  server.registerTool(
     "wanderlog_add_hotel",
     {
       title: "Add a hotel booking to a Wanderlog trip",
@@ -253,6 +288,17 @@ export function buildServer(ctx: AppContext): McpServer {
     },
     requireAuth(ctx, async (args) =>
       updateTripDates(ctx, args as Parameters<typeof updateTripDates>[1])),
+  );
+
+  // No requireAuth — this tool exists specifically to fix an expired session
+  server.registerTool(
+    "wanderlog_set_cookie",
+    {
+      title: "Update the Wanderlog session cookie",
+      description: setCookieDescription,
+      inputSchema: setCookieInputSchema,
+    },
+    async (args) => setCookie(ctx, args as Parameters<typeof setCookie>[1]),
   );
 
   return server;

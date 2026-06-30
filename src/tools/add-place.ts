@@ -136,11 +136,15 @@ export async function addPlace(
     const topPrediction = predictions[0]!;
     const detail: PlaceData = await ctx.rest.getPlaceDetails(topPrediction.place_id);
 
+    // Re-fetch the snapshot just before inserting so insertIndex reflects any
+    // ops that arrived (or were applied locally) during the place-search await.
+    const freshEntry = await ctx.tripCache.getEntry(args.trip_key);
+    const freshSection = freshEntry.snapshot.itinerary.sections[targetIndex]!;
+
     // Build the block WITHOUT timing — timing is set via separate oi ops
     // to match the Wanderlog UI's two-step pattern (insert block, then set fields).
     const block = buildPlaceBlock(detail, userId);
-    const section = trip.itinerary.sections[targetIndex]!;
-    const insertIndex = section.blocks.length;
+    const insertIndex = freshSection.blocks.length;
     const blockPath = ["itinerary", "sections", targetIndex, "blocks", insertIndex];
     const ops: Json0Op[] = [
       { p: blockPath, li: block },

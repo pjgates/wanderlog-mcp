@@ -63,6 +63,15 @@ export function formatTrip(
   return parts.join("\n");
 }
 
+function deduplicateBlocks(blocks: Block[]): Block[] {
+  const seen = new Set<number>();
+  return blocks.filter((b) => {
+    if (seen.has(b.id)) return false;
+    seen.add(b.id);
+    return true;
+  });
+}
+
 function renderSection(section: Section, format: ResponseFormat): string | null {
   if (section.mode === "dayPlan" && section.date) {
     return renderDaySection(section, format);
@@ -71,7 +80,7 @@ function renderSection(section: Section, format: ResponseFormat): string | null 
 
   const icon = sectionIcon(section);
   const heading = section.heading?.trim() || sectionDefaultHeading(section);
-  const lines = section.blocks
+  const lines = deduplicateBlocks(section.blocks)
     .map((b) => formatBlockLine(b, format))
     .filter(Boolean) as string[];
   if (lines.length === 0) return null;
@@ -80,10 +89,11 @@ function renderSection(section: Section, format: ResponseFormat): string | null 
 
 function renderDaySection(section: Section, format: ResponseFormat): string {
   const label = formatDayLabel(section);
-  if (section.blocks.length === 0) {
+  const blocks = deduplicateBlocks(section.blocks);
+  if (blocks.length === 0) {
     return `📅 ${label}\n  (no plans)`;
   }
-  const lines = section.blocks
+  const lines = blocks
     .map((b) => formatBlockLine(b, format))
     .filter(Boolean) as string[];
   return `📅 ${label}\n${lines.map((l) => `  • ${l}`).join("\n")}`;

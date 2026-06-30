@@ -197,14 +197,24 @@ export function findTripCenter(
 }
 
 /**
- * Resolves the target section for adding a block — either a specific day
- * or the "Places to visit" list. Shared by add-place, add-note, add-checklist.
+ * Resolves the target section for adding a block — a named section,
+ * a specific day, or the "Places to visit" list.
+ * Shared by add-place, add-note, add-checklist.
  */
 export function findTargetSection(
   trip: TripPlan,
   day?: string,
 ): { index: number; section: Section; label: string } {
   if (day) {
+    // First try matching a named non-day section (e.g. "Pokelids")
+    const lc = day.trim().toLowerCase();
+    for (let i = 0; i < trip.itinerary.sections.length; i++) {
+      const s = trip.itinerary.sections[i]!;
+      if (s.heading && s.heading.toLowerCase() === lc) {
+        return { index: i, section: s, label: `section "${s.heading}"` };
+      }
+    }
+    // Fall back to day-based resolution
     const daySection = resolveDay(trip, day);
     const found = findDaySectionByDate(trip, daySection.date!);
     if (!found) {

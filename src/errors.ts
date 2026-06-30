@@ -46,9 +46,19 @@ export class WanderlogError extends Error {
 export class WanderlogAuthError extends WanderlogError {
   constructor(message = "Wanderlog session invalid or expired") {
     super(message, "auth_expired", {
-      hint: "Capture a fresh connect.sid cookie from wanderlog.com DevTools (Application → Cookies) and update WANDERLOG_COOKIE in your MCP config.",
+      hint: [
+        "Your WANDERLOG_COOKIE has expired. To get a fresh one:",
+        "  1. Open https://wanderlog.com in Chrome/Edge and log in",
+        "  2. Press F12 to open DevTools",
+        "  3. Click the Application tab",
+        "  4. In the left sidebar expand Storage → Cookies → https://wanderlog.com",
+        "  5. Find the row named 'connect.sid'",
+        "  6. Double-click its Value cell and copy the full string (starts with s%3A)",
+        "  7. Paste the value as WANDERLOG_COOKIE in ~/.cursor/mcp.json (or your MCP config)",
+        "  8. Restart the MCP server",
+      ].join("\n"),
       followUps: [
-        "Ask the user to refresh WANDERLOG_COOKIE in the MCP config, then restart the server.",
+        "Tell the user their Wanderlog cookie has expired. They can refresh it automatically by running: npm run refresh-cookie (from ~/Code/wanderlog-mcp), then restarting the MCP server in Cursor.",
       ],
     });
     this.name = "WanderlogAuthError";
